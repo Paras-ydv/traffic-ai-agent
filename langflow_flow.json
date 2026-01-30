@@ -1,0 +1,86 @@
+{
+  "name": "Explainable Traffic Congestion Agent",
+  "description": "Agentic RAG system for explainable traffic congestion analysis using Astra DB and IBM Granite",
+  "nodes": [
+    {
+      "id": "chat_input",
+      "type": "ChatInput",
+      "position": { "x": 0, "y": 200 },
+      "data": {}
+    },
+    {
+      "id": "astra_db",
+      "type": "AstraDB",
+      "position": { "x": 300, "y": 200 },
+      "data": {
+        "database": "traffic_ai_db",
+        "collection": "traffic_congestion",
+        "search_type": "similarity"
+      }
+    },
+    {
+      "id": "data_to_message",
+      "type": "TypeConvert",
+      "position": { "x": 600, "y": 200 },
+      "data": {
+        "output_type": "message",
+        "template": "Traffic records retrieved from database:\n{{input}}"
+      }
+    },
+    {
+      "id": "prompt_template",
+      "type": "PromptTemplate",
+      "position": { "x": 900, "y": 200 },
+      "data": {
+        "template": "The following traffic records were retrieved from the database:\n\n{input}\n\nBased on these records, explain why congestion occurs, identify key factors (time, road type, volume, weather), and provide mitigation insights."
+      }
+    },
+    {
+      "id": "ibm_watsonx",
+      "type": "IBMWatsonx",
+      "position": { "x": 1200, "y": 200 },
+      "data": {
+        "model_name": "ibm/granite-3-8b-instruct",
+        "system_message": "You are an AI system for explainable traffic congestion analysis. Provide clear, structured, and human-readable explanations."
+      }
+    },
+    {
+      "id": "chat_output",
+      "type": "ChatOutput",
+      "position": { "x": 1500, "y": 200 },
+      "data": {}
+    }
+  ],
+  "edges": [
+    {
+      "source": "chat_input",
+      "target": "astra_db",
+      "sourceHandle": "output",
+      "targetHandle": "search_query"
+    },
+    {
+      "source": "astra_db",
+      "target": "data_to_message",
+      "sourceHandle": "search_results",
+      "targetHandle": "input"
+    },
+    {
+      "source": "data_to_message",
+      "target": "prompt_template",
+      "sourceHandle": "output",
+      "targetHandle": "input"
+    },
+    {
+      "source": "prompt_template",
+      "target": "ibm_watsonx",
+      "sourceHandle": "prompt",
+      "targetHandle": "input"
+    },
+    {
+      "source": "ibm_watsonx",
+      "target": "chat_output",
+      "sourceHandle": "model_response",
+      "targetHandle": "input"
+    }
+  ]
+}
